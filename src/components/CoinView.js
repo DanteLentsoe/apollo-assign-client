@@ -1,14 +1,12 @@
 import React from 'react';
 import {useState, useEffect} from 'react';
 import "../index.css";
-import gql from "graphql-tag";
-import {useQuery} from "@apollo/client";
+import {useQuery, NetworkStatus, gql} from "@apollo/client";
 
 export default function CoinView() { 
 
-const EXCHANGE_COIN = gql`
-  query {
-  coins {
+const EXCHANGE_COIN = gql`query{
+    coins {
     id
     name
     nameid
@@ -26,34 +24,45 @@ const EXCHANGE_COIN = gql`
 }
 `;
 
-const { loading, error, data } = useQuery(EXCHANGE_COIN) 
+const { loading, error, data, refetch, networkStatus } = useQuery(EXCHANGE_COIN);
+
+console.log({loading, error, data})
+
 
 // Server Console checks
-
-if (loading) {
-  console.log("Loading...")
+if (networkStatus === NetworkStatus.refetch) {
+ console.log("Refetching!");
 }
-if (error) {
-  console.log("Error :( ")
-  } 
 
-   // return dataLocal ? JSON.parse(storedData) : [];
 
-const arrData = data.coins;
+  const [coinData, setCoinData] = useState([]);
+  
+  const [updateCoinData, setUpdateCoinData] = useState(coinData);
 
-const [coinData, setCoinData] = useState(arrData);
 
-var [updateCoinData, setUpdateCoinData] = useState(coinData);
+   //re-render page
+   const [render, setRender] = useState();
 
-// Local Storage
+   const handleShowCoins = () => {
+     setRender(coinData);
+   }; 
+
+  // Local Storage
 const storeObj = localStorage.setItem("coin", JSON.stringify(coinData));
 localStorage.getItem("coin")
-const parseObj = JSON.parse(storeObj) || "[]";
 
+React.useEffect(() => {
+  if(data && data.coins){ setCoinData(data.coins)}
+}, [data]);
+
+const handleHide = (id) => {
+  let updateList = coinData.filter(coin => coin.id !== id);
+  setUpdateCoinData(updateList);
+     }; 
 
 const ExchangeRates = () => {
 
-    return updateCoinData.map(({ id, name, nameid, price_usd, symbol,  price_btc, percent_change_1h,
+    return  coinData.length && coinData.map(({ id, name, nameid, price_usd, symbol,  price_btc, percent_change_1h,
     percent_change_7d,
     percent_change_24h,
     csupply,
@@ -61,16 +70,16 @@ const ExchangeRates = () => {
     msupply,
     market_cap_usd}) => (
    
-      <div className="coin-box" key={data.coins.symbol}>
+      <div className="coin-box" key={coinData.id}>
        <h2 style={{color:"black"}}>{name}</h2>  
        
         <p>Price In USD: {price_usd}</p>
          <p> {nameid}</p>
          <p>{symbol}</p>
-         <button onClick={() => handleDisplayInfo(symbol)} className="btn-style">Show More Info</button>
+         <button onClick={() => handleDisplayInfo(id)} className="btn-style">Show More Info</button>
          
            <div className="btn-remove-position">
-           <button onClick={() => handleHide(data.coins.symbol)} className="btn-style">Remove Coin</button>
+           <button onClick={() => handleHide(coinData.id)} className="btn-style">Remove Coin</button>
            </div>
            
       </div>
@@ -79,21 +88,14 @@ const ExchangeRates = () => {
     }
 
  
-
-
- //re-render page
-    const [render, setRender] = useState();
-
-    const handleShowCoins = () => {
-      setRender(coinData);
-    }; 
+    if (loading == false && !error) {
  
+      ExchangeRates();
+      
+      } else{
+        console.log("Loading not completed, Errors found!!");
+      }
 
-
-const handleHide = (symbol) => {
-let updateList = coinData.filter(coin => coin.symbol !== symbol);
-setCoinData(updateList);
-    }; 
 
   
 
