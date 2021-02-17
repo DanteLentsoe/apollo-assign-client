@@ -30,13 +30,14 @@ const { loading, error, data } = useQuery(EXCHANGE_COIN)
 
 // Server Console checks
 
+if (loading) {
+  console.log("Loading...")
+}
+if (error) {
+  console.log("Error :( ")
+  } 
 
    // return dataLocal ? JSON.parse(storedData) : [];
-
-// Local Storage
-//localStorage.setItem("coin", JSON.stringify(coinData));
-localStorage.getItem("coin")
-
 
 const arrData = data.coins;
 
@@ -44,17 +45,15 @@ const [coinData, setCoinData] = useState(arrData);
 
 var [updateCoinData, setUpdateCoinData] = useState(coinData);
 
+// Local Storage
+const storeObj = localStorage.setItem("coin", JSON.stringify(coinData));
+localStorage.getItem("coin")
+const parseObj = JSON.parse(storeObj) || "[]";
+
 
 const ExchangeRates = () => {
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-  else if (error) {
-    return <p>Error :(</p>;
-    } else {
-
-    return data.coins.map(({ id, name, nameid, price_usd, symbol,  price_btc, percent_change_1h,
+    return updateCoinData.map(({ id, name, nameid, price_usd, symbol,  price_btc, percent_change_1h,
     percent_change_7d,
     percent_change_24h,
     csupply,
@@ -79,7 +78,7 @@ const ExchangeRates = () => {
   ));
     }
 
-} 
+ 
 
 
  //re-render page
